@@ -1,0 +1,181 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+###########################################################################################
+
+Welcome to RStudio IDE!
+
+1. Your working directory is set to '/resources/rstudio'. We recommend you to use 
+'resources/data' to store your data that will be available to other Data Scientist Workbench 
+components, such as Jupyter Notebook.
+
+2. SparkR run-time environment is initialized. The 'sc' SparkContext is already defined 
+for you to run Apache Spark from R.
+###########################################################################################
+
+
+Attaching package: ‘SparkR’
+
+The following objects are masked from ‘package:base’:
+
+    as.data.frame, colnames, colnames<-, drop, endsWith, intersect,
+    rank, rbind, sample, startsWith, subset, summary, transform, union
+
+Spark package found in SPARK_HOME: /home/notebook/spark-2.3.1-bin-hadoop2.7
+Launching java with spark-submit command /home/notebook/spark-2.3.1-bin-hadoop2.7/bin/spark-submit   "--packages" "com.databricks:spark-csv_2.11:1.4.0" "sparkr-shell" /tmp/RtmpI1K2sC/backend_portbf6d4aa805 
+> library(readxl)
+> penduduk_data_adi <- read_excel("/resources/data/penduduk_data_adi.xlsx")
+readxl works best with a newer version of the tibble package.
+You currently have tibble v1.4.2.
+Falling back to column name repair from tibble <= v1.4.2.
+Message displays once per session.
+> View(penduduk_data_adi)                                                              
+> library(ggplot2)
+
+Attaching package: ‘ggplot2’
+
+The following object is masked from ‘package:SparkR’:
+
+    expr
+
+Warning message:
+As of rlang 0.4.0, dplyr must be at least version 0.8.0.
+✖ dplyr 0.7.6 is too old for rlang 0.4.2.
+ℹ Please update dplyr with `install.packages("dplyr")`. 
+> library("dplyr", lib.loc="/usr/local/lib/R/site-library")
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:SparkR’:
+
+    arrange, between, coalesce, collect, contains, count, cume_dist,
+    dense_rank, desc, distinct, explain, expr, filter, first, group_by,
+    intersect, lag, last, lead, mutate, n, n_distinct, ntile, percent_rank,
+    rename, row_number, sample_frac, select, sql, summarize, union
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(ggplot2)
+> library(cluster)
+> data=penduduk_data_adi
+> data
+# A tibble: 15 x 4
+   desa          laki perempuan jumlah
+   <chr>        <dbl>     <dbl>  <dbl>
+ 1 gondowangi    3030      3042   6072
+ 2 Sawangan      2425      2550   4975
+ 3 mangunsari    1415      1447   2862
+ 4 Tirtosari     1650      1716   3366
+ 5 Podosoko      2497      2430   4927
+ 6 Butuh         1570      1605   3175
+ 7 Krogowanan    1911      1871   3782
+ 8 Kapuhan       1882      1870   3752
+ 9 Gantang       1709      1624   3333
+10 Jati          1996      1928   3924
+11 Soronalan     1131      1086   2217
+12 Wulunggunung  1130      1064   2194
+13 Ketep         1200      1171   2371
+14 Wololelo      3274      3087   6361
+15 Banyuroto     2031      1945   3976
+> data$desa
+ [1] "gondowangi"   "Sawangan"     "mangunsari"   "Tirtosari"    "Podosoko"    
+ [6] "Butuh"        "Krogowanan"   "Kapuhan"      "Gantang"      "Jati"        
+[11] "Soronalan"    "Wulunggunung" "Ketep"        "Wololelo"     "Banyuroto"   
+> hasil<-kmeans(data[,2,3],3)
+> hasil
+K-means clustering with 3 clusters of sizes 7, 4, 4
+
+Cluster means:
+      [,1]
+1 1821.286
+2 2806.500
+3 1219.000
+
+Clustering vector:
+ [1] 2 2 3 1 2 1 1 1 1 1 3 3 3 2 1
+
+Within cluster sum of squares by cluster:
+[1] 191331.4 509841.0  54442.0
+ (between_SS / total_SS =  87.3 %)
+
+Available components:
+
+[1] "cluster"      "centers"      "totss"        "withinss"     "tot.withinss"
+[6] "betweenss"    "size"         "iter"         "ifault"      
+> hasil$cluster
+ [1] 2 2 3 1 2 1 1 1 1 1 3 3 3 2 1
+> hasil$centers
+      [,1]
+1 1821.286
+2 2806.500
+3 1219.000
+> hasil$size
+[1] 7 4 4
+> table(hasil$cluster, data$desa)
+   
+    Banyuroto Butuh Gantang gondowangi Jati Kapuhan Ketep Krogowanan mangunsari Podosoko
+  1         1     1       1          0    1       1     0          1          0        0
+  2         0     0       0          1    0       0     0          0          0        1
+  3         0     0       0          0    0       0     1          0          1        0
+   
+    Sawangan Soronalan Tirtosari Wololelo Wulunggunung
+  1        0         0         1        0            0
+  2        1         0         0        1            0
+  3        0         1         0        0            1
+> hasil$cluster <- as.factor(hasil$cluster)
+> ggplot(data, aes(data$desa, data$laki, data$perempuan, color = hasil$cluster)) + geom_point()
+> dataSample <-data[,2,3]
+> hc <- hclust(dist(dataSample), method="ave")
+> hc
+
+Call:
+hclust(d = dist(dataSample), method = "ave")
+
+Cluster method   : average 
+Distance         : euclidean 
+Number of objects: 15 
+
+> plot(hc, hang = -1, labels=data$2016)
+Error: unexpected numeric constant in "plot(hc, hang = -1, labels=data$2016"
+> d <- dist(dataSample, method="euclidian")
+> pamCluster <- pam(d, 3)
+> clusplot(as.matrix(d), pamCluster$cluster, color=T, shade=T, labels=3, lines=0)
+> pamCluster
+Medoids:
+     ID   
+[1,]  1  1
+[2,]  8  8
+[3,] 13 13
+Clustering vector:
+ [1] 1 2 3 2 1 2 2 2 2 2 3 3 3 1 2
+Objective function:
+   build     swap 
+178.8667 178.8667 
+
+Available components:
+[1] "medoids"    "id.med"     "clustering" "objective"  "isolation"  "clusinfo"  
+[7] "silinfo"    "diss"       "call"      
+> 
+> 
